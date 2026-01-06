@@ -20,33 +20,47 @@ const Book = memo(({ book, user, isPurchased }: BookProps) => {
   //stripe checkout
   const startCheckout = async (bookId: number) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/checkout`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bookId,
-            title: book.title,
-            price: book.price,
-            userId: user?.id,
-          }),
+      console.log("startCheckout: sending checkout request", { bookId, title: book.title, price: book.price, userId: user?.id });
+      const response = await fetch(`/api/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookId,
+          title: book.title,
+          price: book.price,
+          userId: user?.id,
+        }),
+      });
+
+      const contentType = response.headers.get("content-type") ?? "";
+
+      if (response.ok && contentType.includes("application/json")) {
+        const responseData = await response.json();
+        console.log("checkout response data:", responseData);
+
+        if (responseData && responseData.checkout_url) {
+          // store whichever session id key is returned (session_id|sessionId)
+          const sid = responseData.session_id ?? responseData.sessionId ?? "";
+          if (sid) sessionStorage.setItem("stripeSessionId", sid);
+
+          // Use full navigation to external Stripe URL to guarantee redirect
+          try {
+            window.location.assign(responseData.checkout_url);
+          } catch (e) {
+            // fallback
+            router.push(responseData.checkout_url);
+          }
+        } else {
+          console.error("Invalid response data:", responseData);
+          alert("購入処理に失敗しました（サーバー応答が不正です）。コンソールを確認してください。");
         }
-      );
-
-      const responseData = await response.json();
-
-      if (responseData && responseData.checkout_url) {
-        sessionStorage.setItem("stripeSessionId", responseData.session_id);
-
-        //チェックアウト後のURL遷移先
-        router.push(responseData.checkout_url);
       } else {
-        console.error("Invalid response data:", responseData);
+        const text = await response.text();
+        console.error("checkout unexpected response:", response.status, text.slice(0, 200));
+        alert("購入処理に失敗しました（サーバーエラー）。コンソールを確認してください。");
       }
     } catch (err) {
       console.error("Error in startCheckout:", err);
-      // エラー時の処理
     }
   };
 

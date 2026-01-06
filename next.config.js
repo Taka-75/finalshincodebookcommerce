@@ -21,6 +21,16 @@ const nextConfig = {
     ],
   },
   reactStrictMode: false,
+  // Disable server-side source maps in development to avoid malformed "sourceMapURL could not be parsed" errors
+  // (these invalid source map comments appear in some compiled vendor chunks and cause runtime warnings).
+  webpack: (config, { dev, isServer }) => {
+    if (dev && isServer) {
+      // Temporarily re-enable server-side dev source maps to capture the overlay error
+      // and identify the offending chunk. Revert this after debugging.
+      config.devtool = 'eval-source-map';
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;

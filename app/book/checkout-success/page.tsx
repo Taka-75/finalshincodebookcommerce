@@ -16,17 +16,21 @@ const PurchaseSuccess = () => {
       if (sessionId) {
         console.log(sessionId);
         try {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/checkout/success`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ sessionId }),
-            }
-          );
-          const data = await response.json();
-          console.log(data);
-          setBookUrl(data.purchase.bookId);
+          const response = await fetch(`/api/checkout/success`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId }),
+          });
+
+          const contentType = response.headers.get("content-type") ?? "";
+          if (response.ok && contentType.includes("application/json")) {
+            const data = await response.json();
+            console.log(data);
+            setBookUrl(data.purchase.bookId);
+          } else {
+            const text = await response.text();
+            console.error("checkout success unexpected response:", response.status, text.slice(0, 200));
+          }
         } catch (error) {
           console.error("Error fetching data: ", error);
         }

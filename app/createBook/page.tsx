@@ -26,15 +26,19 @@ const CreateBook = () => {
     const formData = new FormData();
     formData.append("file", file); // ファイルオブジェクトを追加
 
-    const imageUploadResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/thumbnail/upload?filename=${imageFileName}`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
+    const imageUploadResponse = await fetch(`/api/thumbnail/upload?filename=${imageFileName}`, {
+      method: "POST",
+      body: formData,
+    });
 
-    const imageUrlData = await imageUploadResponse.json();
+    const imageUploadContentType = imageUploadResponse.headers.get("content-type") ?? "";
+    let imageUrlData: any = {};
+    if (imageUploadResponse.ok && imageUploadContentType.includes("application/json")) {
+      imageUrlData = await imageUploadResponse.json();
+    } else {
+      const text = await imageUploadResponse.text();
+      throw new Error("thumbnail upload failed: " + imageUploadResponse.status + " " + text.slice(0, 200));
+    }
 
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/book`, {
       headers: {
@@ -49,7 +53,14 @@ const CreateBook = () => {
       }),
     });
 
-    const result = await response.json();
+    const respContentType = response.headers.get("content-type") ?? "";
+    let result: any = {};
+    if (response.ok && respContentType.includes("application/json")) {
+      result = await response.json();
+    } else {
+      const text = await response.text();
+      throw new Error("create book failed: " + response.status + " " + text.slice(0, 200));
+    }
 
     setBlob(result);
   };

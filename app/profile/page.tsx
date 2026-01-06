@@ -17,10 +17,17 @@ export default async function ProfilePage() {
   const session = await getServerSession(nextAuthOptions);
   const user: any = session?.user;
 
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/purchases/${user.id}`
-  );
-  const data = await response.json();
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? `http://localhost:${process.env.PORT ?? 3002}`;
+  const response = await fetch(`${baseUrl}/api/purchases/${user.id}`);
+  const contentType = response.headers.get("content-type") ?? "";
+  let data: any = [];
+  if (response.ok && contentType.includes("application/json")) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    console.warn("purchases fetch unexpected response:", response.status, text.slice(0, 200));
+    data = [];
+  }
 
   // // 各購入履歴に対してmicroCMSから詳細情報を取得
   const detailBooks = await Promise.all(

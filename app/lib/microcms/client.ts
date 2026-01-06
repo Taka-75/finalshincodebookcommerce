@@ -1,28 +1,37 @@
-import { BookType } from "@/app/types/types";
-import { MicroCMSQueries, createClient } from "microcms-js-sdk";
+import { createClient } from "microcms-js-sdk";
 
-export const client = createClient({
-  serviceDomain: process.env.NEXT_PUBLIC_SERVICE_DOMAIN!,
-  apiKey: process.env.NEXT_PUBLIC_API_KEY!,
+console.log("DEBUG_env", {
+  domain: process.env.MICROCMS_SERVICE_DOMAIN,
+  api: process.env.MICROCMS_API_KEY,
 });
 
-export const getAllBooks = async () => {
-  const allBooks = await client.get({
-    endpoint: "bookcommerce",
-    queries: {
-      offset: 0,
-      limit: 10,
-    },
-  });
+export const client = createClient({
+  serviceDomain: process.env.MICROCMS_SERVICE_DOMAIN as string,
+  apiKey: process.env.MICROCMS_API_KEY as string,
+});
 
-  return allBooks;
+// 404 を吸収する安全な関数
+export const getAllBooks = async () => {
+  try {
+    const data = await client.get({
+      endpoint: "books",
+    });
+    return data;
+  } catch (err) {
+    console.warn("getAllBooks microCMS error:", err);
+    return { contents: [] };
+  }
 };
 
-export const getDetailBook = async (contentId: string) => {
-  const detailBook = await client.getListDetail<BookType>({
-    endpoint: "bookcommerce",
-    contentId,
-  });
-
-  return detailBook;
+export const getDetailBook = async (id: string) => {
+  try {
+    const book = await client.get({
+      endpoint: "books",
+      contentId: id,
+    });
+    return book;
+  } catch (err) {
+    console.warn("getDetailBook microCMS error:", err);
+    return null;
+  }
 };

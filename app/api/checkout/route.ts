@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import { NextResponse } from "next/server";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000";
 
 export async function POST(request: Request, response: Response) {
   const { title, price, bookId, userId } = await request.json();
@@ -33,8 +33,10 @@ export async function POST(request: Request, response: Response) {
     });
     return NextResponse.json({
       checkout_url: session.url,
+      session_id: session.id,
     });
   } catch (err: any) {
-    return NextResponse.json({ message: err.message });
+    console.error("checkout route error:", err);
+    return NextResponse.json({ message: err?.message ?? String(err) });
   }
 }
