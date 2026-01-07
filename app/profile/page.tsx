@@ -11,8 +11,14 @@ import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "../lib/next-auth/options";
 
 export default async function ProfilePage() {
-  const session = await getServerSession(nextAuthOptions);
-  const user: any = session?.user;
+  let user: any = null;
+  try {
+    const session = await getServerSession(nextAuthOptions);
+    user = session?.user;
+  } catch (err) {
+    console.error("getServerSession error in profile:", err);
+    user = null;
+  }
 
   // If not logged in, show a gentle message (don't attempt server fetches)
   if (!user?.id) {
