@@ -27,8 +27,8 @@ export default function GlobalError({ error }: { error: any }) {
       <body>
         <div style={{ padding: 40 }}>
           <h1 style={{ fontSize: 24, fontWeight: "bold" }}>Server error</h1>
-          <p>Sorry — something went wrong on the server.</p>
-          <p>If you're the site owner, check server logs for details (look for "Client reported error").</p>
+          <p>Sorry - something went wrong on the server.</p>
+          <p>If you are the site owner, check server logs for details (search for Client reported error).</p>
           {error?.digest && (
             <p style={{ marginTop: 12 }}>
               <strong>Digest:</strong> <code>{error.digest}</code>
