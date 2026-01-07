@@ -4,6 +4,9 @@ import { getAllBooks } from "./lib/microcms/client";
 import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "./lib/next-auth/options";
 
+// This page uses server-side session information and must be dynamically rendered at runtime.
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   // サーバー側でセッション取得（エラーを吸収してログ出しする）
   let user: any = null;

@@ -10,6 +10,9 @@ import Loading from "../loading";
 import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "../lib/next-auth/options";
 
+// This page uses server-side session information and must be dynamically rendered at runtime.
+export const dynamic = "force-dynamic";
+
 export default async function ProfilePage() {
   let user: any = null;
   try {
