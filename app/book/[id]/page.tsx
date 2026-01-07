@@ -1,9 +1,14 @@
 import { getDetailBook } from "@/app/lib/microcms/client";
 import Image from "next/image";
-import React, { useEffect } from "react";
+import React from "react";
+import { notFound } from "next/navigation";
 
 const DetailBook = async ({ params }: { params: { id: string } }) => {
   const book = await getDetailBook(params.id);
+  if (!book) {
+    // If microCMS is not configured or the book doesn't exist, return 404 instead of throwing
+    notFound();
+  }
 
   return (
     <div className="container mx-auto p-4">

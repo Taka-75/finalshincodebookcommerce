@@ -11,33 +11,47 @@ import { getServerSession } from "next-auth";
 import { nextAuthOptions } from "../lib/next-auth/options";
 
 export default async function ProfilePage() {
-  // const [detailBooks, setDetailBooks] = useState<BookType[]>([]);
-
-  // 以下、カード情報追加のための関数などの追加
   const session = await getServerSession(nextAuthOptions);
   const user: any = session?.user;
 
+  // If not logged in, show a gentle message (don't attempt server fetches)
+  if (!user?.id) {
+    return (
+      <div className="container mx-auto p-4">
+        <h1 className="text-xl font-bold mb-4">プロフィール</h1>
+        <p>ログインしてください。</p>
+      </div>
+    );
+  }
+
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? `http://localhost:${process.env.PORT ?? 3002}`;
-  const response = await fetch(`${baseUrl}/api/purchases/${user.id}`);
-  const contentType = response.headers.get("content-type") ?? "";
+
   let data: any = [];
-  if (response.ok && contentType.includes("application/json")) {
-    data = await response.json();
-  } else {
-    const text = await response.text();
-    console.warn("purchases fetch unexpected response:", response.status, text.slice(0, 200));
+  try {
+    const response = await fetch(`${baseUrl}/api/purchases/${user.id}`);
+    const contentType = response.headers.get("content-type") ?? "";
+
+    if (response.ok && contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.warn("purchases fetch unexpected response:", response.status, text.slice(0, 200));
+      data = [];
+    }
+  } catch (err) {
+    console.warn("purchases fetch error:", err);
     data = [];
   }
 
-  // // 各購入履歴に対してmicroCMSから詳細情報を取得
+  // Fetch detail books from microCMS, filter out missing/null results
   const detailBooks = await Promise.all(
     data.map(async (purchase: Purchase) => {
-      console.log(purchase.bookId);
       const res = await getDetailBook(purchase.bookId);
-      console.log(res);
-      return await getDetailBook(purchase.bookId);
+      return res;
     })
   );
+
+  const safeDetailBooks = detailBooks.filter((b): b is BookType => !!b);
 
   return (
     <div className="container mx-auto p-4">
@@ -59,7 +73,7 @@ export default async function ProfilePage() {
 
       <span className="font-medium text-lg mb-4 mt-4 block">購入した記事</span>
       <div className="flex items-center gap-6">
-        {detailBooks.map((detailBook: BookType) => (
+        {safeDetailBooks.map((detailBook: BookType) => (
           <PurchaseProduct key={detailBook.id} detailBook={detailBook} />
         ))}
       </div>
