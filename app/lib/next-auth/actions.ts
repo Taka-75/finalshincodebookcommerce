@@ -1,6 +1,6 @@
-"use server";
+"use client";
 
-import { signIn } from "@/auth";
+import { signIn } from "next-auth/react";
 
 export async function authenticateWithGitHub() {
   try {
