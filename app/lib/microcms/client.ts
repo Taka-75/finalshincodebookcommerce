@@ -1,49 +1,30 @@
 import { createClient } from "microcms-js-sdk";
+import type { BookType } from "@/app/types/types";
 
-const SERVICE_DOMAIN = process.env.MICROCMS_SERVICE_DOMAIN;
-const API_KEY = process.env.MICROCMS_API_KEY;
-
-console.log("DEBUG_env microcms", {
-  domain: SERVICE_DOMAIN,
-  api: API_KEY,
-  hasCredentials: !!(SERVICE_DOMAIN && API_KEY),
+// microCMS クライアント
+export const client = createClient({
+  serviceDomain: process.env.MICROCMS_SERVICE_DOMAIN as string,
+  apiKey: process.env.MICROCMS_API_KEY as string,
 });
 
-const getClient = () => {
-  if (!SERVICE_DOMAIN || !API_KEY) {
-    console.warn(
-      "microCMS credentials missing: MICROCMS_SERVICE_DOMAIN or MICROCMS_API_KEY not set. Skipping microCMS requests."
-    );
-    return null;
-  }
-  return createClient({
-    serviceDomain: SERVICE_DOMAIN as string,
-    apiKey: API_KEY as string,
-  });
-};
-
-// 404 を吸収する安全な関数
-export const getAllBooks = async () => {
+// 404 を吸収する安全な関数（一覧）
+export const getAllBooks = async (): Promise<BookType[]> => {
   try {
-    const client = getClient();
-    if (!client) return { contents: [] };
-
-    const data = await client.get({
+    const data = await client.get<{ contents: BookType[] }>({
       endpoint: "books",
     });
-    return data;
+    return data.contents ?? [];
   } catch (err) {
     console.warn("getAllBooks microCMS error:", err);
-    return { contents: [] };
+    // 失敗時でも map() が落ちないように空配列を返す
+    return [];
   }
 };
 
+// 404 を吸収する安全な関数（詳細）
 export const getDetailBook = async (id: string) => {
   try {
-    const client = getClient();
-    if (!client) return null;
-
-    const book = await client.get({
+    const book = await client.get<BookType>({
       endpoint: "books",
       contentId: id,
     });
