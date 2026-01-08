@@ -22,7 +22,13 @@ export default async function Home() {
   let books: BookType[] = [];
   try {
     const res = await getAllBooks();
-    books = res ?? [];
+    // res が配列であることを確認（getAllBooks は配列を返すはずだが、念のため）
+    if (Array.isArray(res)) {
+      books = res;
+    } else {
+      console.warn("getAllBooks returned non-array:", typeof res, res);
+      books = [];
+    }
   } catch (err) {
     console.warn("getAllBooks error:", err);
     books = [];
@@ -49,7 +55,9 @@ export default async function Home() {
     }
   }
 
-  const purchasedIds = new Set(purchases.map((p: any) => p.bookId));
+  // purchases が配列であることを確認
+  const safePurchases = Array.isArray(purchases) ? purchases : [];
+  const purchasedIds = new Set(safePurchases.map((p: any) => p.bookId));
 
   return (
     <main className="flex flex-wrap justify-center items-center md:mt-32 mt-20">

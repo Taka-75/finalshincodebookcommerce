@@ -13,7 +13,34 @@ export const getAllBooks = async (): Promise<BookType[]> => {
     const data = await client.get<{ contents: BookType[] }>({
       endpoint: "books",
     });
-    return data.contents ?? [];
+    
+    // デバッグ用ログ（本番環境でも確認できるように）
+    console.log("getAllBooks raw data:", {
+      hasData: !!data,
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      hasContents: data && typeof data === 'object' && 'contents' in data,
+    });
+    
+    // data が存在し、contents が配列であることを確認
+    if (data && typeof data === 'object' && 'contents' in data) {
+      const contents = data.contents;
+      if (Array.isArray(contents)) {
+        return contents;
+      } else {
+        console.warn("getAllBooks: contents is not an array", typeof contents);
+        return [];
+      }
+    }
+    
+    // data 自体が配列の場合（通常はないが、念のため）
+    if (Array.isArray(data)) {
+      console.warn("getAllBooks: data is directly an array (unexpected)");
+      return data;
+    }
+    
+    console.warn("getAllBooks: unexpected data structure", data);
+    return [];
   } catch (err) {
     console.warn("getAllBooks microCMS error:", err);
     // 失敗時でも map() が落ちないように空配列を返す
