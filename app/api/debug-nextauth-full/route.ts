@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import NextAuth from "next-auth";
 import { nextAuthOptions } from "@/app/lib/next-auth/options";
