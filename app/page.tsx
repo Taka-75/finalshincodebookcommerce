@@ -8,11 +8,15 @@ import { nextAuthOptions } from "./lib/next-auth/options";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
+  console.log("Home: component rendering started");
+  
   let user: any = null;
 
   try {
+    console.log("Home: calling getServerSession");
     const session = await getServerSession(nextAuthOptions);
     user = session?.user;
+    console.log("Home: getServerSession completed, user:", !!user);
   } catch (err) {
     console.error("getServerSession error in home:", err);
     user = null;
@@ -21,16 +25,20 @@ export default async function Home() {
   // Fetch books from microCMS
   let books: BookType[] = [];
   try {
+    console.log("Home: calling getAllBooks");
     const res = await getAllBooks();
+    console.log("Home: getAllBooks returned, type:", typeof res, "isArray:", Array.isArray(res));
+    
     // res が配列であることを確認（getAllBooks は配列を返すはずだが、念のため）
     if (Array.isArray(res)) {
       books = res;
+      console.log("Home: books set, length:", books.length);
     } else {
       console.warn("getAllBooks returned non-array:", typeof res, res);
       books = [];
     }
   } catch (err) {
-    console.warn("getAllBooks error:", err);
+    console.error("getAllBooks error in Home:", err);
     books = [];
   }
 
@@ -59,10 +67,14 @@ export default async function Home() {
   const safePurchases = Array.isArray(purchases) ? purchases : [];
   const purchasedIds = new Set(safePurchases.map((p: any) => p.bookId));
 
+  // 最終的な安全チェック
+  const safeBooks = Array.isArray(books) ? books : [];
+  console.log("Home: rendering with books, length:", safeBooks.length);
+
   return (
     <main className="flex flex-wrap justify-center items-center md:mt-32 mt-20">
       <h2 className="text-center w-full font-bold text-3xl mb-2">Book Commerce</h2>
-      {books.map((book) => (
+      {safeBooks.map((book) => (
         <Book key={book.id} book={book} user={user} isPurchased={purchasedIds.has(book.id)} />
       ))}
     </main>
